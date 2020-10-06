@@ -1,6 +1,6 @@
 #include <sourcemod>
 #include <sdktools>
-#define VERSION "1.2.0"
+#define VERSION "1.2.1"
 #define TEAM_SURVIVORS 2
 #define TEAM_INFECTED 3
 #define ZOMBIECLASS_TANK 8
@@ -16,9 +16,9 @@ public Plugin:myinfo=
 	url = ""
 };
 
-//레벨
+//Create variable to hold level for players
 new Lv[MAXPLAYERS+1]
-//경험치
+//Create variable to hold experience for players
 new EXP[MAXPLAYERS+1]
 //경험치량
 //좀비가 줄..
@@ -66,9 +66,9 @@ new bool:JobChooseBool[MAXPLAYERS+1]
 new JD[MAXPLAYERS+1] = 0
 //기술자
 new bool:AcolyteBool[MAXPLAYERS+1]
-//기술자 - Making Ammo
-new HealingAuraLv[MAXPLAYERS+1]
-new bool:EnaHA[MAXPLAYERS+1]
+//기술자 - Overcharged Clip
+new OverchargedClipLv[MAXPLAYERS+1]
+new bool:EnableOvClip[MAXPLAYERS+1]
 //기술자 - Fortify Weapon
 new FWLv[MAXPLAYERS+1]
 //솔져
@@ -500,7 +500,7 @@ public Action:Command_GiveLevel(client, args)
 		for (new i = 0; i < target_count; i++)
 		{
 			targetclient = target_list[i];
-			if(Lv[targetclient] + StringToInt(arg2) < 31)
+			if(Lv[targetclient] + StringToInt(arg2) < MAXLEVEL+1)
 			{
 				Lv[targetclient] += StringToInt(arg2);
 				StatusPoint[targetclient] += GetConVarInt(LvUpSP)*StringToInt(arg2)
@@ -509,7 +509,7 @@ public Action:Command_GiveLevel(client, args)
 			}
 			else
 			{
-				PrintToChat(client, "\x04 %s \x03Max Level is 30. You can't put someone over that");
+				PrintToChat(client, "\x04 %s \x03Max Level is %d. You can't level someone past that", MAXLEVEL);
 			}
 		}
 	}
@@ -765,6 +765,7 @@ public Action:StatusConfirmFunc(clientId)
 	return Plugin_Handled
 }
 
+//Handles confirmation prompt to add points to skills
 public StatusConfirmHandler(Handle:menu, MenuAction:action, client, itemNum)
 {
 	if(action == MenuAction_Select)
@@ -773,133 +774,7 @@ public StatusConfirmHandler(Handle:menu, MenuAction:action, client, itemNum)
 		{
 			switch(ISCONFIRM[client])
 			{
-			/*##########################################################################
-			ANYTHING ADJUSTING STATS HERE IS PART OF THE CONFORMATION MENU AND THEREFORE REDUNDANT
-			############################################################################*/
-				case 0: //힘 - Strength
-				{
-					if(StatusPoint[client] > 0)
-					{
-						Str[client] += 1
-						StatusPoint[client] -= 1
-						PrintToChat(client, "\x04Strength \x03is now \x05 %d.\n\x03Attack Damage increased by \x05%d \x03Percent", Str[client], Str[client]*2)
-						CreateTimer(0.1, StatusUp, client)
-						if(StatusPoint[client] > 0)
-						{
-							StatusChooseMenuFunc(client)
-							PrintToChat(client, "\x03You have \x04Status Points \x03Remaining.")
-						}
-					}
-					else
-					{
-						PrintToChat(client, "\x03You have no \x04Status Points \x03left")
-					}
-				}
-				
-				case 1: //민첩 - Agility
-				{
-					if(StatusPoint[client] > 0)
-					{
-						Agi[client] += 1
-						StatusPoint[client] -= 1
-						PrintToChat(client, "\x04Agility \x03is now \x05%d. \n\x04Move Speed and Jump height \x03increased by \x05%d \x03Percent", Agi[client], Agi[client])
-						CreateTimer(0.1, StatusUp, client)
-						if(StatusPoint[client] > 0)
-						{
-							StatusChooseMenuFunc(client)
-							PrintToChat(client, "\x03You have \x04Status Points \x03Remaining.")
-						}
-					}
-					else
-					{
-						PrintToChat(client, "\x03You have no \x04Status Points \x03left")
-					}
-				}
-				
-				case 2: //체력 - Health
-				{
-					if(StatusPoint[client] > 0)
-					{
-						Health[client] += 1
-						StatusPoint[client] -= 1
-						PrintToChat(client, "\x04Health \x03is increased by \x05%d", 10)
-						new HealthForStatus = GetClientHealth(client)
-						CreateTimer(0.1, StatusUp, client)
-						if(JD[client] == 0 || JD[client] == 1 || JD[client] == 3)
-						{
-							SetEntData(client, FindDataMapOffs(client, "m_iHealth"), HealthForStatus+10, 4, true)
-						}
-						if(JD[client] == 2)
-						{
-							if(TrainedHealthLv[client] < 2)
-							{
-								SetEntData(client, FindDataMapOffs(client, "m_iHealth"), HealthForStatus+10, 4, true)
-							}
-							else
-							{
-								SetEntData(client, FindDataMapOffs(client, "m_iHealth"),  HealthForStatus+(10*TrainedHealthLv[client]), 4, true)
-							}
-						}
-						if(StatusPoint[client] > 0)
-						{
-							StatusChooseMenuFunc(client)
-							PrintToChat(client, "\x03You have \x04Status Points \x03Remaining.")
-						}
-					}
-					else
-					{
-						PrintToChat(client, "\x03You have no \x04Status Points \x03left")
-					}
-				}
-				
-				case 3: //인내력 - Endurance
-				{
-					if(StatusPoint[client] > 0)
-					{
-						Endurance[client] += 1
-						StatusPoint[client] -= 1
-						if(Endurance[client] < 51)
-						{
-							PrintToChat(client, "\x04Endurance \x03is now \x05%d. \n\x03You take \x05%d \x03Percent \x04less Damage", Endurance[client], Endurance[client])
-							PrintToChat(client, "\x03Over 50 Endurance adds \x04Damage Reflection.")
-						}
-						CreateTimer(0.1, StatusUp, client)
-						if(StatusPoint[client] > 0)
-						{
-							StatusChooseMenuFunc(client)
-							PrintToChat(client, "\x03You have \x04Status Points \x03Remaining.")
-						}
-						if(Endurance[client] > 50)
-						{
-							PrintToChat(client, "\x04Damage Reflection: \x05%d \x03Percent", (Endurance[client]-50))
-						}
-					}
-					else
-					{
-						PrintToChat(client, "\x03You have no \x04Status Points \x03left")
-					}
-				}
-				
-				case 4: //지능 - Intelligence
-				{
-					if(StatusPoint[client] > 0)
-					{
-						Intelligence[client] += 1
-						StatusPoint[client] -= 1
-						PrintToChat(client, "\x04Intelligence \x03is now \x05%d. \n\x03Skill Efficiency increased", Intelligence[client])
-						CreateTimer(0.1, StatusUp, client)
-						if(StatusPoint[client] > 0)
-						{
-							StatusChooseMenuFunc(client)
-							PrintToChat(client, "\x03You have \x04Status Points \x03Remaining.")
-						}
-					}
-					else
-					{
-						PrintToChat(client, "\x03You have no \x04Status Points \x03left")
-					}
-				}
-				
+				//Obsolete Status Point confirm code removed
 				case 5: //힐링
 				{
 					if(SkillPoint[client] > 0)
@@ -961,10 +836,10 @@ public StatusConfirmHandler(Handle:menu, MenuAction:action, client, itemNum)
 				{
 					if(SkillPoint[client] > 0 && JD[client] == 1)
 					{
-						EnaHA[client] = true
-						HealingAuraLv[client] += 1
+						EnableOvClip[client] = true
+						OverchargedClipLv[client] += 1
 						SkillPoint[client] -= 1
-						PrintToChat(client, "\x03Skill: \x04Making Ammo \x03's Level has become \x05 %d.", HealingAuraLv[client])
+						PrintToChat(client, "\x03Skill: \x04Overcharged Clip \x03's Level has become \x05 %d.", OverchargedClipLv[client])
 						CreateTimer(0.1, StatusUp, client)
 						if(SkillPoint[client] > 0)
 						{
@@ -1279,7 +1154,7 @@ public Action:SkillChooseMenuFunc(clientId)
 	SetMenuTitle(menu, "Unspent Skill Points: %d", SkillPoint[clientId])
 	AddMenuItem(menu, "option1", "Healing")
 	AddMenuItem(menu, "option2", "EarthQuake")
-	AddMenuItem(menu, "option3", "Making Ammo")
+	AddMenuItem(menu, "option3", "Overcharged Clip")
 	AddMenuItem(menu, "option4", "Trained Health")
 	AddMenuItem(menu, "option5", "Sprint")
 	AddMenuItem(menu, "option6", "Bionic Sheild")
@@ -1363,7 +1238,7 @@ public Action:DetermineSkillMenuFunc(clientId)
 	AddMenuItem(menu, "option1", "Skill Lock")
 	AddMenuItem(menu, "option2", "Healing")
 	AddMenuItem(menu, "option3", "EarthQuake")
-	AddMenuItem(menu, "option4", "Making Ammo")
+	AddMenuItem(menu, "option4", "Overcharged Clip")
 	AddMenuItem(menu, "option5", "Sprint")
 	AddMenuItem(menu, "option6", "Bionic Shield")
 	AddMenuItem(menu, "option7", "Infinite Ammo")
@@ -1422,18 +1297,18 @@ public DeSkiMenu(Handle:menu, MenuAction:action, client, itemNum)
 			
 			case 3: //총알제작
 			{
-				if(HealingAuraLv[client] > 0 && JD[client] == 1)
+				if(OverchargedClipLv[client] > 0 && JD[client] == 1)
 				{
 					SkillConfirm[client] = 3
-					PrintToChat(client, "\x03Skill to Use: \x04Making Ammo")
+					PrintToChat(client, "\x03Skill to Use: \x04Overcharged Clip")
 					PrintToChat(client, "\x03How to Use: Press Zoom")
-					PrintToChat(client, "\x03Delay: \x05 %d \x03Seconds", 20+HealingAuraLv[client])
-					PrintToChat(client, "\x03Amount: \x05 %d", 5*HealingAuraLv[client])
+					PrintToChat(client, "\x03Delay: \x05 %d \x03Seconds", 20+OverchargedClipLv[client])
+					PrintToChat(client, "\x03Amount: \x05 %d", 5*OverchargedClipLv[client])
 				}
 				
-				if(HealingAuraLv[client] < 1)
+				if(OverchargedClipLv[client] < 1)
 				{
-					PrintToChat(client, "\x03You haven't learned \x04Making Ammo \x03Yet.")
+					PrintToChat(client, "\x03You haven't learned \x04Overcharged Clip \x03Yet.")
 				}
 				
 				if(JD[client] == 0 || JD[client] == 2 || JD[client] == 3)
@@ -1528,6 +1403,7 @@ public Action:JobFunc(clientId)
 	return Plugin_Handled
 }
 
+//Handles Job Selection
 public JobMenu(Handle:menu, MenuAction:action, client, itemNum)
 {
 	if(action == MenuAction_Select)
@@ -1729,7 +1605,7 @@ public Action:JobSkillInfoFunc(clientId)
 {
 	new Handle:menu = CreateMenu(JobSkillMenu)
 	SetMenuTitle(menu, "Job Skill Information")
-	AddMenuItem(menu, "option1", "Making Ammo")
+	AddMenuItem(menu, "option1", "Overcharged Clip")
 	AddMenuItem(menu, "option2", "Passive::Trained Health")
 	AddMenuItem(menu, "option3", "Sprint")
 	AddMenuItem(menu, "option4", "Bionic Shield")
@@ -1748,9 +1624,9 @@ public JobSkillMenu(Handle:menu, MenuAction:action, client, itemNum)
 		{
 			case 0: //총알 제작
 			{
-				PrintToChat(client, "\x06Making Ammo")
-				PrintToChat(client, "\x03Level: \x04 %d", HealingAuraLv[client])
-				PrintToChat(client, "\x03Making Amount: \x04 %d", 5*HealingAuraLv[client])
+				PrintToChat(client, "\x06Overcharged Clip")
+				PrintToChat(client, "\x03Level: \x04 %d", OverchargedClipLv[client])
+				PrintToChat(client, "\x03Ammo added to magazine: \x04 %d", 5*OverchargedClipLv[client])
 			}
 			
 			case 1: //패시브::단련된 체력 - Health
@@ -1920,7 +1796,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		
 			case 3:
 			{
-				if(EnaHA[client])
+				if(EnableOvClip[client])
 				{
 					new ent = GetEntDataEnt2(client, OffAW)
 					if(ent != -1)
@@ -1928,12 +1804,12 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 						new CC1 = GetEntData(ent, C1)
 						new CC2 = GetEntData(ent, C2)
 						
-						SetEntData(ent, C1, CC1+5*HealingAuraLv[client], 4, true)
-						SetEntData(ent, C2, CC2+5*HealingAuraLv[client], 4, true)
+						SetEntData(ent, C1, CC1+5*OverchargedClipLv[client], 4, true)
+						SetEntData(ent, C2, CC2+5*OverchargedClipLv[client], 4, true)
 					}
-					EnaHA[client] = false
-					CreateTimer(20.0+HealingAuraLv[client], HealingAuraDelay, client)
-					PrintToChat(client, "\x03You \x04Made Ammo!")
+					EnableOvClip[client] = false
+					CreateTimer(20.0+OverchargedClipLv[client], OvClipDelay, client)
+					PrintToChat(client, "\x03Your \x04Clip is overcharged!")
 				}	
 			}
 			
@@ -2023,10 +1899,10 @@ public Action:ResetSprin(Handle:timer, any:client)
 	PrintToChat(client, "\x04Sprint \x03Recharged!")
 }
 
-public Action:HealingAuraDelay(Handle:timer, any:client)
+public Action:OvClipDelay(Handle:timer, any:client)
 {
-	EnaHA[client] = true
-	PrintToChat(client, "\x04Making Ammo \x03Recharged!")
+	EnableOvClip[client] = true
+	PrintToChat(client, "\x04Overcharged Clip \x03Recharged!")
 }
 
 public Action:ShowMyExp(client, args)

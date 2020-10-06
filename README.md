@@ -1,4 +1,4 @@
-# -L4D2-RPG-Mode
+# L4D2 RPG Mode
 
 ### **This plugin is in active development. Please report all errors in the Issues tab.**
 

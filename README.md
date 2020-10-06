@@ -1,5 +1,7 @@
 # -L4D2-RPG-Mode
 
+### **This plugin is in active development. Please report all errors in the Issues tab.**
+
 ## Level
 Every Survivor starts at level 0 and can level to a maximum of 100.
 Each level, survivors receive (by default) 5 Status Points and 1 Skill point.

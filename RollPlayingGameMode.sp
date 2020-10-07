@@ -228,33 +228,51 @@ public Action:PK(Handle:event, String:event_name[], bool:dontBroadcast)
 		switch(ZClass){
 			case 1:
 			{
-				EXP[killer] += GetConVarInt(SmoExp);
-				PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Smoker", GetConVarInt(SmoExp));
+				if(ZClass == 1)
+				{
+					EXP[killer] += GetConVarInt(SmoExp)
+					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Smoker", GetConVarInt(SmoExp))
+				}
 			}
 			case 2:
 			{
-				EXP[killer] += GetConVarInt(BooExp);
-				PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Boomer", GetConVarInt(BooExp));
+				if(ZClass == 2)
+				{
+					EXP[killer] += GetConVarInt(BooExp)
+					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Boomer", GetConVarInt(BooExp))
+				}
 			}
 			case 3:
 			{
-				EXP[killer] += GetConVarInt(HunExp);
-				PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Hunter", GetConVarInt(HunExp));
+				if(ZClass == 3)
+				{
+					EXP[killer] += GetConVarInt(HunExp)
+					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Hunter", GetConVarInt(HunExp))
+				}
 			}
 			case 4:
 			{
-				EXP[killer] += GetConVarInt(SpiExp);
-				PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Spitter", GetConVarInt(SpiExp));
+				if(ZClass == 4)
+				{
+					EXP[killer] += GetConVarInt(SpiExp)
+					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Spitter", GetConVarInt(SpiExp))
+				}
 			}
 			case 5:
 			{
-				EXP[killer] += GetConVarInt(JocExp);
-				PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Jockey", GetConVarInt(JocExp));
+				if(ZClass == 5)
+				{
+					EXP[killer] += GetConVarInt(JocExp)
+					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Jockey", GetConVarInt(JocExp))
+				}
 			}
 			case 6:
 			{
-				EXP[killer] += GetConVarInt(ChaExp);
-				PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Charger", GetConVarInt(ChaExp));
+				if(ZClass == 6)
+				{
+					EXP[killer] += GetConVarInt(ChaExp)
+					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Charger", GetConVarInt(ChaExp))
+				}
 			}
 			default:
 			{

@@ -1,6 +1,6 @@
 #include <sourcemod>
 #include <sdktools>
-#define VERSION "1.2.1"
+#define VERSION "1.2.2"
 #define TEAM_SURVIVORS 2
 #define TEAM_INFECTED 3
 #define ZOMBIECLASS_TANK 8
@@ -212,7 +212,7 @@ public Action:CEOP(Handle:timer, any:target)
 		PrintToChat(target, "\x03Skill Point gained. Type \x05!rpgmenu \x03to upgrade Skills")
 			
 		//reset exp
-		EXP[target] = 0
+		EXP[target] -= expneeded
 	}
 }
 
@@ -225,66 +225,7 @@ public Action:PK(Handle:event, String:event_name[], bool:dontBroadcast)
 	
 	if(killer != 0 && !IsFakeClient(killer) && GetClientTeam(killer) == TEAM_SURVIVORS)
 	{
-		switch(ZClass){
-			case 1:
-			{
-				if(ZClass == 1)
-				{
-					EXP[killer] += GetConVarInt(SmoExp)
-					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Smoker", GetConVarInt(SmoExp))
-				}
-			}
-			case 2:
-			{
-				if(ZClass == 2)
-				{
-					EXP[killer] += GetConVarInt(BooExp)
-					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Boomer", GetConVarInt(BooExp))
-				}
-			}
-			case 3:
-			{
-				if(ZClass == 3)
-				{
-					EXP[killer] += GetConVarInt(HunExp)
-					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Hunter", GetConVarInt(HunExp))
-				}
-			}
-			case 4:
-			{
-				if(ZClass == 4)
-				{
-					EXP[killer] += GetConVarInt(SpiExp)
-					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Spitter", GetConVarInt(SpiExp))
-				}
-			}
-			case 5:
-			{
-				if(ZClass == 5)
-				{
-					EXP[killer] += GetConVarInt(JocExp)
-					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Jockey", GetConVarInt(JocExp))
-				}
-			}
-			case 6:
-			{
-				if(ZClass == 6)
-				{
-					EXP[killer] += GetConVarInt(ChaExp)
-					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Charger", GetConVarInt(ChaExp))
-				}
-			}
-			default:
-			{
-				if(IsPlayerTank(deadbody))
-				{
-					EXP[killer] += GetConVarInt(TanExp)
-					PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Tank", GetConVarInt(TanExp))
-				}
-			}
-		}
-		
-		/*
+		//This cannot work as a switch, it causes very bad bugs
 		if(ZClass == 1)
 		{
 			EXP[killer] += GetConVarInt(SmoExp)
@@ -326,7 +267,6 @@ public Action:PK(Handle:event, String:event_name[], bool:dontBroadcast)
 			EXP[killer] += GetConVarInt(TanExp)
 			PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Tank", GetConVarInt(TanExp))
 		}
-		*/
 	}
 }
 
@@ -1527,9 +1467,10 @@ public Action:MyInfoFunc(clientId)
 	SetMenuTitle(menu, "Info")
 	AddMenuItem(menu, "option1", "Check LVL and STATS")
 	AddMenuItem(menu, "option2", "Class Requirements")
+	AddMenuItem(menu, "option3", "EXP Progress")
 	if(JD[clientId] > 0)
 	{
-		AddMenuItem(menu, "option3", "Job Skill Information")
+		AddMenuItem(menu, "option4", "Job Skill Information")
 	}
 	SetMenuExitButton(menu, true)
 	DisplayMenu(menu, clientId, MENU_TIME_FOREVER)
@@ -1553,7 +1494,12 @@ public MyInfoMenu(Handle:menu, MenuAction:action, client, itemNum)
 				FakeClientCommand(client, "jobinfo")
 			}
 			
-			case 2: //직업 스킬 정보
+			case 2:
+			{
+				PrintToChat(client, "\x07%d EXP \x03to next level.",EXP[client])
+			}
+
+			case 3: //직업 스킬 정보
 			{
 				FakeClientCommand(client, "jobskillinfo")
 			}

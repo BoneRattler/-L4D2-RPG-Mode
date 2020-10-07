@@ -185,17 +185,10 @@ public Action:PFS(Handle:event, String:event_name[], bool:dontBroadcast)
 public Action:CEOP(Handle:timer, any:target)
 {
 	//Level up player according to current level and exp needed function
-	
 	new expneeded;
-	
-	if(Lv[target] < 1){
-		expneeded = 50;
-	}
-	else{
-		//This function for level exp was calculated trying to preserve the original spirit of the exp per level, but scaled to the new max level of 100
-		expneeded = 95*Lv[target]-45;
-	}
-	
+
+	expneeded = expNeeded(Lv[target]);
+
 	if(EXP[target] > expneeded && Lv[target] < MAXLEVEL)
 	{
 		//increment level
@@ -216,6 +209,21 @@ public Action:CEOP(Handle:timer, any:target)
 	}
 }
 
+//function handling exp requirement for next level
+int:expNeeded(playerLevel){
+	new expReq;
+
+	if(playerLevel < 1){
+		expReq = 50;
+	}
+	else{
+		//This function for level exp was calculated trying to preserve the original spirit of the exp per level, but scaled to the new max level of 100
+		expReq = 95*playerLevel-45;
+	}
+
+	return expReq;
+}
+
 //Award Exp for Special Infected Kills
 public Action:PK(Handle:event, String:event_name[], bool:dontBroadcast)	
 {
@@ -226,6 +234,49 @@ public Action:PK(Handle:event, String:event_name[], bool:dontBroadcast)
 	if(killer != 0 && !IsFakeClient(killer) && GetClientTeam(killer) == TEAM_SURVIVORS)
 	{
 		//This cannot work as a switch, it causes very bad bugs
+
+		switch(ZClass){
+            case 1:
+            {
+                EXP[killer] += GetConVarInt(SmoExp);
+                PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Smoker", GetConVarInt(SmoExp));
+            }
+            case 2:
+            {
+                EXP[killer] += GetConVarInt(BooExp);
+                PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Boomer", GetConVarInt(BooExp));
+            }
+            case 3:
+            {
+                EXP[killer] += GetConVarInt(HunExp);
+                PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Hunter", GetConVarInt(HunExp));
+            }
+            case 4:
+            {
+                EXP[killer] += GetConVarInt(SpiExp);
+                PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Spitter", GetConVarInt(SpiExp));
+            }
+            case 5:
+            {
+                EXP[killer] += GetConVarInt(JocExp);
+                PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Jockey", GetConVarInt(JocExp));
+            }
+            case 6:
+            {
+                EXP[killer] += GetConVarInt(ChaExp);
+                PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Charger", GetConVarInt(ChaExp));
+            }
+            default:
+            {
+                if(IsPlayerTank(deadbody))
+                {
+                    EXP[killer] += GetConVarInt(TanExp)
+                    PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Tank", GetConVarInt(TanExp))
+                }
+            }
+        }
+
+		/*
 		if(ZClass == 1)
 		{
 			EXP[killer] += GetConVarInt(SmoExp)
@@ -267,6 +318,7 @@ public Action:PK(Handle:event, String:event_name[], bool:dontBroadcast)
 			EXP[killer] += GetConVarInt(TanExp)
 			PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Tank", GetConVarInt(TanExp))
 		}
+		*/
 	}
 }
 
@@ -1496,7 +1548,10 @@ public MyInfoMenu(Handle:menu, MenuAction:action, client, itemNum)
 			
 			case 2:
 			{
-				PrintToChat(client, "\x07%d EXP \x03to next level.",EXP[client])
+				new expReq = expNeeded(Lv[client]);
+
+				PrintToChat(client, "\x04%d / %d EXP",EXP[client], expReq)
+				PrintToChat(client, "\x04%d EXP \x03to next level.",expReq-EXP[client])
 			}
 
 			case 3: //직업 스킬 정보

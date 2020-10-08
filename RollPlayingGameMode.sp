@@ -8,7 +8,7 @@
 | (_| (_) | | | \__ \ || (_| | | | | |_\__ \
  \___\___/|_| |_|___/\__\__,_|_| |_|\__|___/
 *//////////////////////////////-V-constants-V-////////////////////////////////
-#define VERSION "1.2.3"
+#define VERSION "1.2.4"
 #define TEAM_SURVIVORS 2
 #define TEAM_INFECTED 3
 #define ZOMBIECLASS_TANK 8
@@ -62,8 +62,8 @@ new LegValue
 new Handle:LvUpSP
 new StatusPoint[MAXPLAYERS+1]
 //스킬 - 힐링
-new bool:HealingBool[MAXPLAYERS+1]
-new HealingLv[MAXPLAYERS+1]
+new bool:MendBool[MAXPLAYERS+1]
+new MendLv[MAXPLAYERS+1]
 //스킬 - 지진
 new Float:NowLocation[MAXPLAYERS+1][3]
 new bool:EQBool[MAXPLAYERS+1]
@@ -661,14 +661,25 @@ public Action:RPG_Menu(client,args)
 }
 public Action:RPG_MenuFunc(clientId) 
 {
+	int showOption;
+
+	if(JobChooseBool[clientId] == false)
+	{
+		showOption = ITEMDRAW_DEFAULT;
+	}
+	else
+	{
+		showOption = ITEMDRAW_IGNORE;
+	}
+
 	new Handle:menu = CreateMenu(RPG_MenuHandler)
 	SetMenuTitle(menu, "Level: %d",Lv[clientId])
 	
 	AddMenuItem(menu, "option1", "Use Stat Points")
 	AddMenuItem(menu, "option2", "Use Skill Points")
 	AddMenuItem(menu, "option3", "Assign Skill to Zoom")
-	AddMenuItem(menu, "option4", "Choose Class [At Lv.15 and up]")
-	AddMenuItem(menu, "option5", "Check LVL and STATS")
+	AddMenuItem(menu, "option4", "Choose Class [At Lv.15 and up]", showOption)
+	AddMenuItem(menu, "option5", "Check LVL and other info")
 	
 	SetMenuExitButton(menu, true)
 	
@@ -891,16 +902,48 @@ public Action:SkillChooseMenu(client, args)
 
 public Action:SkillChooseMenuFunc(clientId)
 {
+	//Experimental menu hiding code
+	int showSkill[3];
+
+	if(JD[clientId] != 0)
+	{
+		if(JD[clientId] == 1)//engineer
+		{
+			showSkill[0] = ITEMDRAW_DEFAULT;
+			showSkill[1] = ITEMDRAW_IGNORE;
+			showSkill[2] = ITEMDRAW_IGNORE;
+		}
+		if(JD[clientId] == 2)//soldier
+		{
+			showSkill[0] = ITEMDRAW_IGNORE;
+			showSkill[1] = ITEMDRAW_DEFAULT;
+			showSkill[2] = ITEMDRAW_IGNORE;
+		}
+		if(JD[clientId] == 3)//bionic weapon
+		{
+			showSkill[0] = ITEMDRAW_IGNORE;
+			showSkill[1] = ITEMDRAW_IGNORE;
+			showSkill[2] = ITEMDRAW_DEFAULT;
+		}
+	}
+	else
+	{
+		showSkill[0] = ITEMDRAW_IGNORE;
+		showSkill[1] = ITEMDRAW_IGNORE;
+		showSkill[2] = ITEMDRAW_IGNORE;
+	}
+	//Experimental menu hiding code
+
 	new Handle:menu = CreateMenu(SkillMenu)
 	SetMenuTitle(menu, "Unspent Skill Points: %d", SkillPoint[clientId])
-	AddMenuItem(menu, "option1", "Healing")
+	AddMenuItem(menu, "option1", "Mend")
 	AddMenuItem(menu, "option2", "EarthQuake")
-	AddMenuItem(menu, "option3", "Overcharged Clip")
-	AddMenuItem(menu, "option4", "Trained Health")
-	AddMenuItem(menu, "option5", "Sprint")
-	AddMenuItem(menu, "option6", "Bionic Sheild")
-	AddMenuItem(menu, "option7", "Infinite Ammo")
-	AddMenuItem(menu, "option8", "Fortify Weapon")
+	AddMenuItem(menu, "option3", "Overcharged Clip", showSkill[0])
+	AddMenuItem(menu, "option4", "Trained Health", showSkill[1])
+	AddMenuItem(menu, "option5", "Sprint", showSkill[1])
+	AddMenuItem(menu, "option6", "Bionic Sheild", showSkill[2])
+	AddMenuItem(menu, "option7", "Infinite Ammo", showSkill[1])
+	AddMenuItem(menu, "option8", "Fortify Weapon", showSkill[0])
 	SetMenuExitButton(menu, true)
 	DisplayMenu(menu, clientId, MENU_TIME_FOREVER)
 	return Plugin_Handled
@@ -985,15 +1028,40 @@ public Action:AssignSkillMenu(client, args)
 
 public Action:AssignSkillMenuFunc(clientId)
 {
+	//Experimental menu hiding code
+	int SkillsLv[6];
+
+	SkillsLv[0] = MendLv[clientId];
+	SkillsLv[1] = EarthQuakeLv[clientId];
+	SkillsLv[2] = OverchargedClipLv[clientId];
+	SkillsLv[3] = SprintLv[clientId];
+	SkillsLv[4] = BioShieldLv[clientId];
+	SkillsLv[5] = UpgradeGunLv[clientId];
+
+	int showSkill[sizeof(SkillsLv)];
+
+	for(new i = 0; i < sizeof(SkillsLv); i++)
+	{
+		if(SkillsLv[i] != 0)
+		{
+			showSkill[i] = ITEMDRAW_DEFAULT;
+		}
+		else
+		{
+			showSkill[i] = ITEMDRAW_IGNORE;
+		}
+	}
+	//Experimental menu hiding code
+
 	new Handle:menu = CreateMenu(AssignSkilMenuHandler)
 	SetMenuTitle(menu, "Skill to Use")
-	AddMenuItem(menu, "option1", "Skill Lock")
-	AddMenuItem(menu, "option2", "Healing")
-	AddMenuItem(menu, "option3", "EarthQuake")
-	AddMenuItem(menu, "option4", "Overcharged Clip")
-	AddMenuItem(menu, "option5", "Sprint")
-	AddMenuItem(menu, "option6", "Bionic Shield")
-	AddMenuItem(menu, "option7", "Infinite Ammo")
+	AddMenuItem(menu, "option1", "Deselect Skill")
+	AddMenuItem(menu, "option2", "Mend", showSkill[0])
+	AddMenuItem(menu, "option3", "EarthQuake", showSkill[1])
+	AddMenuItem(menu, "option4", "Overcharged Clip", showSkill[2])
+	AddMenuItem(menu, "option5", "Sprint", showSkill[3])
+	AddMenuItem(menu, "option6", "Bionic Shield", showSkill[4])
+	AddMenuItem(menu, "option7", "Infinite Ammo", showSkill[5])
 	SetMenuExitButton(menu, true)
 	DisplayMenu(menu, clientId, MENU_TIME_FOREVER)
 	return Plugin_Handled
@@ -1008,20 +1076,20 @@ public AssignSkilMenuHandler(Handle:menu, MenuAction:action, client, itemNum)
 			case 0: //고르지 않음
 			{
 				SkillConfirm[client] = 0
-				PrintToChat(client, "\x03 Lock all Skills")
+				PrintToChat(client, "\x03 Skill Deselected. Zoom will do nothing now.")
 			}
 			
 			case 1: //힐링
 			{
-				if(HealingLv[client] > 0)
+				if(MendLv[client] > 0)
 				{
 					SkillConfirm[client] = 1
-					PrintToChat(client, "\x03Skill to Use: \x04Healing")
+					PrintToChat(client, "\x03Skill to Use: \x04Mend")
 					PrintToChat(client, "\x03How to Use: Press Zoom")
 				}
 				else
 				{
-					PrintToChat(client, "\x03You haven't learned \x04Healing \x03Yet.")
+					PrintToChat(client, "\x03You haven't learned \x04Mend \x03Yet.")
 				}
 			}
 			
@@ -1538,18 +1606,18 @@ public StatusConfirmHandler(Handle:menu, MenuAction:action, client, itemNum)
 				{
 					if(SkillPoint[client] > 0)
 					{
-						HealingBool[client] = true
-						HealingLv[client] += 1
+						MendBool[client] = true
+						MendLv[client] += 1
 						SkillPoint[client] -= 1
-						PrintToChat(client, "\x03Skill: \x04Healing")
-						PrintToChat(client, "\x03Level: \x05%d", HealingLv[client])
-						if(HealingLv[client] < 21)
+						PrintToChat(client, "\x03Skill: \x04Mend")
+						PrintToChat(client, "\x03Level: \x05%d", MendLv[client])
+						if(MendLv[client] < 21)
 						{
-							PrintToChat(client, "\x03Heal Amount: \x05%d HP \x03Cooldown: \x05%d \xSeconds", Intelligence[client] + 3*HealingLv[client], 60 - 2*HealingLv[client])
+							PrintToChat(client, "\x03Heal Amount: \x05%d HP \x03Cooldown: \x05%d \xSeconds", Intelligence[client] + 3*MendLv[client], 60 - 2*MendLv[client])
 						}
 						else
 						{
-							PrintToChat(client, "\x03Heal Amount ::\x05 %d \x03Cooldown ::\x05 %d \xSeconds", Intelligence[client] + 3*HealingLv[client], 20)
+							PrintToChat(client, "\x03Heal Amount ::\x05 %d \x03Cooldown ::\x05 %d \xSeconds", Intelligence[client] + 3*MendLv[client], 20)
 						}
 						if(SkillPoint[client] > 0)
 						{
@@ -1786,36 +1854,36 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 			
 			case 1:
 			{
-				if(HealingBool[client])
+				if(MendBool[client])
 				{
 					new ClientHealth = GetClientHealth(client)
-					if(100 + Health[client]*10 > ClientHealth+Intelligence[client]+(3*HealingLv[client]))
+					if(100 + Health[client]*10 > ClientHealth+Intelligence[client]+(3*MendLv[client]))
 					{
-						SetEntData(client, FindDataMapOffs(client, "m_iHealth"), ClientHealth+Intelligence[client]+(3*HealingLv[client]), 4, true)
-						if(HealingLv[client] < 21)
+						SetEntData(client, FindDataMapOffs(client, "m_iHealth"), ClientHealth+Intelligence[client]+(3*MendLv[client]), 4, true)
+						if(MendLv[client] < 21)
 						{
-							CreateTimer(60.0 - 2*HealingLv[client], HealingDelayTimer, client)
+							CreateTimer(60.0 - 2*MendLv[client], MendDelayTimer, client)
 						}
 						else
 						{
-							CreateTimer(20.0, HealingDelayTimer, client)
+							CreateTimer(20.0, MendDelayTimer, client)
 						}
 					}
 					else
 					{
 						SetEntData(client, FindDataMapOffs(client, "m_iHealth"), 100+Health[client]*10, 4, true)
-						if(HealingLv[client] < 21)
+						if(MendLv[client] < 21)
 						{
-							CreateTimer(60.0 - 2*HealingLv[client], HealingDelayTimer, client)
-							PrintToChat(client, "\x03Skill: \x04Healing Lv %d \x03was used. Cooldown: \x05%d \x03Seconds", HealingLv[client], 60-2*HealingLv[client])
+							CreateTimer(60.0 - 2*MendLv[client], MendDelayTimer, client)
+							PrintToChat(client, "\x03Skill: \x04Mend Lv %d \x03was used. Cooldown: \x05%d \x03Seconds", MendLv[client], 60-2*MendLv[client])
 						}
 						else
 						{
-							CreateTimer(20.0, HealingDelayTimer, client)
-							PrintToChat(client, "\x03Skill: \x04Healing Lv %d \x03was used. Cooldown: \x05%d \x03Seconds", HealingLv[client], 20)
+							CreateTimer(20.0, MendDelayTimer, client)
+							PrintToChat(client, "\x03Skill: \x04Mend Lv %d \x03was used. Cooldown: \x05%d \x03Seconds", MendLv[client], 20)
 						}
 					}	
-					HealingBool[client] = false
+					MendBool[client] = false
 				}
 			}
 	
@@ -1865,18 +1933,18 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				{
 					
 					new SprintHealth = GetClientHealth(client)
-					if(SprintHealth - ((100+10*Health[client])*0.5) > 0)
+					if(SprintHealth - ((100+10*Health[client])*0.1) > 0)
 					{
-						SetEntData(client, FindDataMapOffs(client, "m_iHealth"), SprintHealth - RoundToNearest((100+10*Health[client])*0.5), 4, true)
+						SetEntData(client, FindDataMapOffs(client, "m_iHealth"), SprintHealth - RoundToNearest((100+10*Health[client])*0.1), 4, true)
 						EnaSprint[client] = false
 						CreateTimer(6.0+2*SprintLv[client], SprinDelay, client)
 						PrintToChat(client, "\x04Sprint \x03was used.")
-						PrintToChat(client, "\x03By the Penalty, You're hurted by \x05%d", RoundToNearest((100+10*Health[client])*0.5))
+						PrintToChat(client, "\x03You suffer \x05%d \x03Health damage from \x04overexertion", RoundToNearest((100+10*Health[client])*0.1))
 						SetEntDataFloat(client, LegValue, 2.0*(1.0 + Agi[client]*0.02), true)
 					}
 					else
 					{
-						PrintToChat(client, "\x03You can't Sprint because \x04penalty condition is not Satisfied.")
+						PrintToChat(client, "\x03You can't Sprint because \x04it would kill you.")
 					}
 				}
 			}
@@ -1978,10 +2046,10 @@ public Action:ResetEarthQuakeDelay(Handle:timer, any:client)
 		PrintToChat(client, "\x04EarthQuake \x03Recharged!")
 }
 
-public Action:HealingDelayTimer(Handle:timer, any:client)
+public Action:MendDelayTimer(Handle:timer, any:client)
 {
-	HealingBool[client] = true
-	PrintToChat(client, "\x04Healing \x03Recharged!")
+	MendBool[client] = true
+	PrintToChat(client, "\x04Mend \x03Recharged!")
 }
 //////////////////////////-^-cooldowns-^-//////////////////////////////////////////////////////////////////////////////
 

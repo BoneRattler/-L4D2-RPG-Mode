@@ -177,8 +177,9 @@ public Action:PFS(Handle:event, String:event_name[], bool:dontBroadcast)
 	{
 		PrintToChat(target, "\x03Running \x05RPG Mode Version \x04%s", VERSION)
 		PrintToChat(target, "\x04Written by Bone Rattler, Original Version by Rayne")
-		PrintToChat(target, "\x03Your Level is \x04 %d \x03", Lv[target])
-		PrintToChat(target, "\x03STR: \x04%d, \x03AGI: \x04%d, \x03HP: \x04%d, \x03END: \x04%d, \x03INT: \x04%d", Str[target], Agi[target], Health[target], Endurance[target], Intelligence[target])
+		//This code is also ran every time the player is spawned, idk why it is here on first spawn as well.
+		//PrintToChat(target, "\x03Your Level is \x04 %d \x03", Lv[target])
+		//PrintToChat(target, "\x03STR: \x04%d, \x03AGI: \x04%d, \x03HP: \x04%d, \x03END: \x04%d, \x03INT: \x04%d", Str[target], Agi[target], Health[target], Endurance[target], Intelligence[target])
 	}
 }
 

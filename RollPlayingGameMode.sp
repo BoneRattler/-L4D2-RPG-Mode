@@ -474,7 +474,7 @@ public Action:player_death(Handle:event, String:event_name[], bool:dontBroadcast
 	
 	decl String:victimname[32];
 	GetEventString(event, "victimname", victimname, sizeof(victimname));
-	if (killer != client) {
+	if (killer != 0 && killer != client) {
 		if (strcmp(victimname, "boomer", false) == 0)// if killed a boomer add 50 credits
 		{
 			EXP[killer] += GetConVarInt(BooExp);
@@ -511,7 +511,7 @@ public Action:player_death(Handle:event, String:event_name[], bool:dontBroadcast
 //award exp for tank kills
 public tank_killed(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	new killer = GetClientOfUserId(GetEventInt(event, "userid"));
+	new killer = GetClientOfUserId(GetEventInt(event, "attacker"));
 
 	EXP[killer] += GetConVarInt(TanExp);
 	PrintToChat(killer, "\x03You received \x04%d \x03EXP from \x05Tank", GetConVarInt(TanExp));

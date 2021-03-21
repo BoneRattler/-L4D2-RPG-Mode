@@ -1,6 +1,6 @@
 # L4D2 RPG Mode
 
-### **This plugin is in active development, and as such may be unstable at times. Please report all errors in the Issues tab.**
+### **I have begun undertaking other projects, and I feel this project is at an acceptable level. If any issues arrise, please report them and I will fix them if they pose serious problems**
 
 ### **Please look for game-ready versions of the plugin in the releases section on the right**
 
